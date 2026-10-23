@@ -1,0 +1,6 @@
+Name,Email,Phone,City,Signup Date
+John Smith,john.smith@example.com,5551234567,New York,2026-03-05
+Mary O'Neil,mary.oneil@example.com,+15559876543,Boston,2026-03-15
+Priya Sharma,priya.sharma@example,+919876543210,Mumbai,2026-04-25
+"Lee, Chen",chen.lee@example.com,5552223333,San Francisco,2026-06-01
+Bad Phone Person,bad@example.com,12,Austin,not a date

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doc Q&amp;A Chatbot</title>
+<style>
+  :root { --bg:#f7f7f8; --card:#fff; --text:#1d1d1f; --muted:#6b6b75; --accent:#4f46e5; --line:#e4e4ea; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141418; --card:#1e1e24; --text:#ececf1; --muted:#9a9aa6; --accent:#8b85ff; --line:#2e2e36; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; }
+  #chat { min-height: 260px; display:flex; flex-direction:column; gap:12px; }
+  .msg { padding:10px 14px; border-radius:10px; max-width:90%; white-space:pre-wrap; line-height:1.45; }
+  .user { align-self:flex-end; background:var(--accent); color:#fff; }
+  .bot { align-self:flex-start; background:var(--bg); border:1px solid var(--line); }
+  .src { font-size:.8rem; color:var(--muted); margin-top:6px; }
+  form { display:flex; gap:8px; margin-top:12px; }
+  input, textarea { flex:1; padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); font:inherit; }
+  textarea { width:100%; min-height:90px; }
+  button { padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; cursor:pointer; }
+  details summary { cursor:pointer; font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ask your documents</h1>
+  <div class="muted" id="status">Loading…</div>
+
+  <div class="card">
+    <div id="chat"><div class="msg bot">Hi! Ask me anything about the loaded documents. Try “What is the refund policy?”</div></div>
+    <form id="ask">
+      <input id="q" placeholder="Type a question…" autocomplete="off" required>
+      <button>Ask</button>
+    </form>
+  </div>
+
+  <details class="card">
+    <summary>Add your own document</summary>
+    <p class="muted">Paste any text, such as an FAQ, policy or product manual.</p>
+    <input id="docName" placeholder="Document name (optional)" style="width:100%;margin-bottom:8px">
+    <textarea id="docText" placeholder="Paste text here…"></textarea>
+    <button id="addDoc" type="button" style="margin-top:8px">Add document</button>
+  </details>
+</main>
+<script>
+const chat = document.getElementById("chat");
+const add = (text, cls, sources) => {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.textContent = text;
+  if (sources?.length) {
+    const s = document.createElement("div");
+    s.className = "src";
+    s.textContent = "Sources: " + [...new Set(sources.map(x => x.source))].join(", ");
+    div.appendChild(s);
+  }
+  chat.appendChild(div);
+  div.scrollIntoView({ behavior: "smooth" });
+};
+async function refreshStatus() {
+  const s = await fetch("/api/status").then(r => r.json());
+  document.getElementById("status").textContent =
+    `${s.sources.length} document(s) loaded · ` + (s.aiEnabled ? `AI answers on (${s.model})` : "Free mode: answers come from matching passages");
+}
+document.getElementById("ask").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const q = document.getElementById("q");
+  const question = q.value.trim();
+  if (!question) return;
+  add(question, "user");
+  q.value = "";
+  try {
+    const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) }).then(r => r.json());
+    add(r.answer || r.error, "bot", r.sources);
+  } catch { add("Something went wrong. Is the server running?", "bot"); }
+});
+document.getElementById("addDoc").addEventListener("click", async () => {
+  const text = document.getElementById("docText").value;
+  const name = document.getElementById("docName").value;
+  const r = await fetch("/api/docs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, text }) }).then(r => r.json());
+  if (r.ok) { document.getElementById("docText").value = ""; add("Document added. Ask me about it!", "bot"); refreshStatus(); }
+  else add(r.error, "bot");
+});
+refreshStatus();
+</script>
+</body>
+</html>

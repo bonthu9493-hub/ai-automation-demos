@@ -1,0 +1,8 @@
+Name,Email,Phone,City,Signup Date
+  john smith ,John.Smith@Example.COM ,(555) 123-4567,new york,2026-03-05
+MARY O'NEIL,mary.oneil@example.com,+1 555 987 6543,BOSTON,03/15/2026
+john smith,john.smith@example.com,555-123-4567,New York,2026-03-05
+,,,,
+priya sharma,priya.sharma@example,+91 98765 43210,mumbai,25/04/2026
+"Lee, Chen",chen.lee@example.com,555.222.3333,san francisco,2026.06.01
+bad phone person,bad@example.com,12,austin,not a date
